@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 st.title("Emotion Classification App")
 
 input_text = st.text_area("Enter your text:", "How are you?")
-if st.button("Classify Emotion"):
+if st.button("Classify Emotion: Michel's model."):
     if input_text:
-        response = requests.post("http://127.0.0.1:8000/classify-emotion/", json={"text": input_text})
+        response = requests.post("http://127.0.0.1:8000/classify-emotion-michel/", json={"text": input_text})
 
         if response.status_code == 200:
             emotion_probs = response.json()["emotion_probs"]
