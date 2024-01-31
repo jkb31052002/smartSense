@@ -14,13 +14,15 @@ class EmotionPrediction(Base):
     joy_prob_m = Column(Float)
     sadness_prob_m = Column(Float)
     surprise_prob_m = Column(Float)
-    nuetral_prob_m = Column(Float)
+    neutral_prob_m = Column(Float)
     disgust_prob_m = Column(Float)
     anger_prob_r = Column(Float)
+    disgust_prob_r = Column(Float)
     fear_prob_r = Column(Float)
     joy_prob_r = Column(Float)
+    neutral_prob_r = Column(Float)
     sadness_prob_r = Column(Float)
     surprise_prob_r = Column(Float)
-    nuetral_prob_r = Column(Float)
-    disgust_prob_r = Column(Float)
+
+
 

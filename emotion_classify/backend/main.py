@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 Base.metadata.create_all(bind=engine)
 
-EMOTION_CLASSES = ["anger", "fear", "joy", "sadness", "surprise", "neutral", "disgust"]
+EMOTION_CLASSES = ["anger", "disgust", "fear", "joy", "neutral", "sadness", "surprise"]
 
 app = FastAPI()
 
@@ -22,12 +22,12 @@ def get_db():
         db.close()
 
 
-def create_emotion_prediction(db: Session, input_text: InputText, probs_m, probs_f):
+def create_emotion_prediction(db: Session, input_text: InputText, probs_m, probs_r):
     prediction = EmotionPrediction(input_text=input_text.text)
 
-    for i, (emotion_prob_m, emotion_prob_f) in enumerate(zip(probs_m[0], probs_f[0])):
+    for i, (emotion_prob_m, emotion_prob_r) in enumerate(zip(probs_m[0], probs_r[0])):
         setattr(prediction, f"{EMOTION_CLASSES[i]}_prob_m", emotion_prob_m.item())
-        setattr(prediction, f"{EMOTION_CLASSES[i]}_prob_f", emotion_prob_f.item())
+        setattr(prediction, f"{EMOTION_CLASSES[i]}_prob_r", emotion_prob_r.item())
 
     db.add(prediction)
     db.commit()
@@ -40,37 +40,13 @@ async def classify_emotion(input_text: InputText, db: Session = Depends(get_db))
     outputs_m = model(**inputs_m)
     probs_m = F.softmax(outputs_m.logits, dim=1)
 
-    inputs_f = tokenizer_roberta(input_text.text, return_tensors="pt")
-    outputs_f = model_roberta(**inputs_f)
-    probs_f = F.softmax(outputs_f.logits, dim=1)
+    inputs_r = tokenizer_roberta(input_text.text, return_tensors="pt")
+    outputs_r = model_roberta(**inputs_r)
+    probs_r = F.softmax(outputs_r.logits, dim=1)
 
-    prediction = create_emotion_prediction(db, input_text, probs_m, probs_f)
+    prediction = create_emotion_prediction(db, input_text, probs_m, probs_r)
 
-    return {"input_text": input_text.text, "emotion_probs_m": probs_m[0].tolist(), "emotion_probs_f": probs_f[0].tolist()}
-
-# @app.post("/classify-emotion-michel/")
-# async def classify_emotion(input_text: InputText, db: Session = Depends(get_db)):
-#     inputs = tokenizer(input_text.text, return_tensors="pt")
-
-#     outputs = model(**inputs)
-
-#     probs = torch.nn.functional.softmax(outputs.logits, dim=1)
-
-#     prediction = create_emotion_prediction(db, input_text, probs)
-
-#     return {"input_text": input_text.text, "emotion_probs": probs[0].tolist()}
-
-# async def classify_emotion_roberta(input_text: InputText, db: Session = Depends(get_db)):
-#     inputs_r = tokenizer_roberta(input_text.text, return_tensors="pt")
-
-#     outputs_r = model_roberta(**inputs_r)
-
-#     probs_r = torch.nn.functional.softmax(input_text.text, return_tensors="pt")
-
-#     prediction = create_emotion_prediction(db, input_text, probs_r)
-
-#     return {"input_text": input_text.text, "emotion_probs": probs_r[9].tolist()}
-
+    return {"input_text": input_text.text, "emotion_prob_m": probs_m[0].tolist(), "emotion_prob_r": probs_r[0].tolist()}
 
 @app.get("/get-predictions/")
 async def read_predictions(limit: int = 10, db: Session = Depends(get_db)):
