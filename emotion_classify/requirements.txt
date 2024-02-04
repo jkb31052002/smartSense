@@ -1,9 +1,0 @@
-torch
-fastapi
-sqlalchemy
-transformers
-pydantic
-streamlit
-requests
-matplotlib.pyplot
-uvicorn
